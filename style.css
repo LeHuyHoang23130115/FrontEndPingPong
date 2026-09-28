@@ -1,0 +1,102 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    font-family: 'Arial', sans-serif;
+    background-color: #200975;
+}
+
+.main-menu{
+    min-height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.main-menu h1{
+    font-size: 50px;
+    margin-bottom: 60px;
+    color: white;
+}
+
+.menu-btn{
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+
+}
+
+.menu-btn button{
+    min-width: 250px;
+    padding: 15px 10px;
+    border-radius: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.menu-btn button:hover{
+    transform: scale(1.05);
+
+}
+
+
+
+
+
+
+.choose-level{
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.choose-level h2{
+    font-size: 40px;
+    margin-bottom: 50px;
+    color: white;
+}
+
+.levels{
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+
+.btn-level{
+    width: 100px;
+    height: 50px;
+    border-radius: 15px;
+    padding: 15px 10px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-level:hover{
+    transform: scale(1.05);
+}
+
+.btn-back{
+    min-width: 250px;
+    padding: 15px 10px;
+    border-radius: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-back:hover{
+    transform: scale(1.05);
+}
