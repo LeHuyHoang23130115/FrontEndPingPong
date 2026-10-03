@@ -1,15 +1,18 @@
 const mainMenu = document.querySelector(".main-menu");
+const gameScreen = document.querySelector(".game-screen");
 const chooseLevel = document.querySelector(".choose-level");
 
+const playBtn = document.querySelector("#play-btn");
 const chooseLevelBtn = document.querySelector("#select-level");
 const backBtn = document.querySelector("#choose-level-back");
 
-const textLives = document.querySelector("#textLives");
+const textLives = document.querySelector("#live");
+const textScore = document.querySelector("#score");
 
 const gameBoard = document.querySelector(".game-board");
 const paddle = document.querySelector(".paddle");
 
-let paddleX = gameBoard.clientWidth / 2;
+
 const paddleSpeed = 20;
 
 
@@ -18,10 +21,17 @@ let ballSpeedX = 1.5;
 let ballSpeedY = -1.5;
 
 
+let score = 0;
+
 
 let lives = 3;
 let isMoving = false;
+let isGameStart = false;
 
+let paddleX = 0;
+let ballX = 0;
+let ballY = 0;
+const bricks = [];
 
 const brickColors = {
     1: "#BBDEFB",
@@ -31,20 +41,28 @@ const brickColors = {
     5: "#0D47A1"
 };
 
-const brickRows = 8;
-const brickColumns = 6;
-const brickHeight = 15;
-const brickWidth = 75;
-const gapBrickHeight = 15;
-const gapBrickWidth = 100;
 
-const bricksTotalWidth = brickColumns * brickWidth + (brickColumns - 1) * gapBrickWidth;
-
-const brickStartX = (gameBoard.clientWidth - bricksTotalWidth) / 2;
-const brickStartY = 30;
 
 
 //Các nút ở giao diện ban đầu
+playBtn.addEventListener("click", () => {
+    mainMenu.style.display = "none";
+    gameScreen.style.display = "flex";
+
+    paddleX = gameBoard.clientWidth / 2;
+    paddle.style.left = paddleX + "px";
+
+    ballX = gameBoard.clientWidth / 2;
+    ballY = gameBoard.clientHeight - 35 - ball.offsetWidth / 2;
+
+    ball.style.left = ballX + "px";
+    ball.style.top = ballY + "px";
+
+    isGameStart = true;
+    createBrickLv0();
+
+})
+
 chooseLevelBtn.addEventListener("click", () => {
     mainMenu.style.display = "none";
     chooseLevel.style.display = "flex";
@@ -57,7 +75,6 @@ backBtn.addEventListener("click", () => {
 
 
 // Thanh paddle
-paddle.style.left = paddleX + "px";
 document.addEventListener("keydown", function (event) {
     if (event.key == "ArrowLeft" || event.key.toLowerCase() == "a"){
         paddleX -= paddleSpeed;
@@ -84,12 +101,7 @@ document.addEventListener("keydown", function (event) {
 } )
 
 
-// Ball
-let ballX = gameBoard.clientWidth / 2;
-let ballY = gameBoard.clientHeight - 35 - ball.offsetWidth / 2;
 
-ball.style.left = ballX + "px";
-ball.style.top = ballY + "px";
 
 function ballMoving(){
     if (!isMoving){
@@ -166,6 +178,9 @@ function ballMoving(){
             brick.remove();
             bricks.splice(i, 1);
 
+            score += 10;
+            textScore.textContent = score;
+
             const overlapX = Math.min(ballRight - brickLeft, brickRight - ballLeft);
             const overlapY = Math.min(ballBottom - brickTop, brickBottom - ballTop);
 
@@ -181,29 +196,45 @@ function ballMoving(){
 }
 
 document.addEventListener("keydown", function (event) {
-    if (event.key == " " && !isMoving){
+    if (event.key == " " && isGameStart && !isMoving){
         isMoving = true;
         ballMoving();
     }
 })
 
-// Tạo gạch lv0
 
-const bricks = [];
 
-for (let row = 0; row < brickRows; row++) {
-    for (let col = 0; col < brickColumns; col++) {
-        const brick = document.createElement("div");
-        brick.classList.add("brick", "normalBrick");
 
-        const brickX = brickStartX + col * (brickWidth + gapBrickWidth);
-        const brickY = brickStartY + row * (brickHeight + gapBrickHeight);
 
-        brick.style.left = brickX + "px";
-        brick.style.top = brickY + "px";
+function createBrickLv0(){
+    const brickRows = 8;
+    const brickColumns = 6;
+    const brickHeight = 15;
+    const brickWidth = 75;
+    const gapBrickHeight = 15;
+    const gapBrickWidth = 100;
 
-        gameBoard.appendChild(brick);
-        bricks.push(brick);
+    const bricksTotalWidth = brickColumns * brickWidth + (brickColumns - 1) * gapBrickWidth;
+
+    const brickStartX = (gameBoard.clientWidth - bricksTotalWidth) / 2;
+    const brickStartY = 30;
+
+
+
+    for (let row = 0; row < brickRows; row++) {
+        for (let col = 0; col < brickColumns; col++) {
+            const brick = document.createElement("div");
+            brick.classList.add("brick", "normalBrick");
+
+            const brickX = brickStartX + col * (brickWidth + gapBrickWidth);
+            const brickY = brickStartY + row * (brickHeight + gapBrickHeight);
+
+            brick.style.left = brickX + "px";
+            brick.style.top = brickY + "px";
+
+            gameBoard.appendChild(brick);
+            bricks.push(brick);
+        }
     }
 }
 
