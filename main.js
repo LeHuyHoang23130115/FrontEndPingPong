@@ -45,8 +45,13 @@ const brickColors = {
 const finalScore = document.querySelector("#final-score");
 const gameOver = document.querySelector(".game-over");
 
-const againBtn = document.querySelector(".again-btn");
-const backToMenuBtn = document.querySelector(".back-to-menu");
+const againBtn = document.querySelectorAll(".again-btn");
+const backToMenuBtn = document.querySelectorAll(".back-to-menu");
+
+
+const winGame = document.querySelector(".win-game");
+const winScore = document.querySelector("#win-score");
+const nextLevelBtn = document.querySelectorAll(".nextLevel");
 
 
 playBtn.addEventListener("click", () => {
@@ -70,24 +75,28 @@ backBtn.addEventListener("click", () => {
 })
 
 
+againBtn.forEach((btn) => {
+    btn.addEventListener("click", () => {
+        gameOver.style.display = "none";
 
-againBtn.addEventListener("click", () => {
-    gameOver.style.display = "none";
+        resetGame();
 
-    resetGame();
-
-    createBrickLv1()
+        createBrickLv1()
+    })
 })
 
 
-backToMenuBtn.addEventListener("click", () => {
-    mainMenu.style.display = "flex";
-    gameScreen.style.display = "none";
-    gameOver.style.display = "none";
+backToMenuBtn.forEach((btn) => {
+    btn.addEventListener("click", () => {
+        mainMenu.style.display = "flex";
+        gameScreen.style.display = "none";
+        gameOver.style.display = "none";
 
-    isGameStart = false;
-    isMoving = false;
+        isGameStart = false;
+        isMoving = false;
+    })
 })
+
 
 
 // Thanh paddle
@@ -141,6 +150,7 @@ function resetGame(){
     textScore.textContent = score;
 
     gameOver.style.display = "none";
+    winGame.style.display = "none";
 
     bricks.forEach(brick => brick.remove());
     bricks.length = 0;
@@ -236,6 +246,17 @@ function ballMoving(){
         }
     }
 
+    if (bricks.length === 0){
+        isMoving = false;
+        isGameStart = false;
+
+        winScore.textContent = score;
+
+        winGame.style.display = "flex";
+        return;
+
+    }
+
     requestAnimationFrame(ballMoving);
 }
 
@@ -251,8 +272,8 @@ document.addEventListener("keydown", function (event) {
 
 
 function createBrickLv1(){
-    const brickRows = 8;
-    const brickColumns = 6;
+    const brickRows = 1;
+    const brickColumns = 1;
     const brickHeight = 15;
     const brickWidth = 75;
     const gapBrickHeight = 15;
