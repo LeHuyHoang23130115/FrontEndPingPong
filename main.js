@@ -27,6 +27,7 @@ let score = 0;
 let lives = 3;
 let isMoving = false;
 let isGameStart = false;
+let isPause = false;
 
 let paddleX = 0;
 let ballX = 0;
@@ -54,6 +55,11 @@ const winScore = document.querySelector("#win-score");
 const nextLevelBtn = document.querySelectorAll(".nextLevel");
 
 
+const pauseGame = document.querySelector(".pause-game");
+const pauseScore = document.querySelector("#pause-score");
+const continueBtn = document.querySelectorAll(".continue-btn");
+
+
 playBtn.addEventListener("click", () => {
     mainMenu.style.display = "none";
     gameScreen.style.display = "flex";
@@ -77,8 +83,6 @@ backBtn.addEventListener("click", () => {
 
 againBtn.forEach((btn) => {
     btn.addEventListener("click", () => {
-        gameOver.style.display = "none";
-
         resetGame();
 
         createBrickLv1()
@@ -91,16 +95,42 @@ backToMenuBtn.forEach((btn) => {
         mainMenu.style.display = "flex";
         gameScreen.style.display = "none";
         gameOver.style.display = "none";
+        winGame.style.display = "none";
+        pauseGame.style.display = "none";
 
         isGameStart = false;
         isMoving = false;
+        isPause = false;
     })
 })
 
 
+document.addEventListener('keydown', (e) => {
+    if (e.key === "Escape" && isGameStart && !isPause) {
+        isPause = true;
+        pauseScore.textContent = score;
+
+        pauseGame.style.display = "flex";
+    }
+})
+
+continueBtn.forEach((btn) => {
+    btn.addEventListener("click", () => {
+        isPause = false;
+        pauseGame.style.display = "none";
+
+        if (isMoving){
+            ballMoving();
+        }
+    })
+})
 
 // Thanh paddle
 document.addEventListener("keydown", function (event) {
+    if (!isGameStart ||isPause){
+        return;
+    }
+
     if (event.key == "ArrowLeft" || event.key.toLowerCase() == "a"){
         paddleX -= paddleSpeed;
     }
@@ -145,12 +175,14 @@ function resetBallAndPaddle(){
 function resetGame(){
     lives = 3;
     score = 0;
+    isPause = false;
 
     textLives.textContent = lives;
     textScore.textContent = score;
 
     gameOver.style.display = "none";
     winGame.style.display = "none";
+    pauseGame.style.display = "none";
 
     bricks.forEach(brick => brick.remove());
     bricks.length = 0;
@@ -162,7 +194,7 @@ function resetGame(){
 
 
 function ballMoving(){
-    if (!isMoving){
+    if (!isGameStart || !isMoving || isPause){
         return;
     }
     ballX += ballSpeedX;
@@ -261,7 +293,7 @@ function ballMoving(){
 }
 
 document.addEventListener("keydown", function (event) {
-    if (event.key == " " && isGameStart && !isMoving){
+    if (event.key == " " && isGameStart && !isMoving && !isPause){
         isMoving = true;
         ballMoving();
     }
@@ -272,8 +304,8 @@ document.addEventListener("keydown", function (event) {
 
 
 function createBrickLv1(){
-    const brickRows = 1;
-    const brickColumns = 1;
+    const brickRows = 8;
+    const brickColumns = 6;
     const brickHeight = 15;
     const brickWidth = 75;
     const gapBrickHeight = 15;

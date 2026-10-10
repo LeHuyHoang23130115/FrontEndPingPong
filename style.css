@@ -169,7 +169,7 @@ body{
 
 
 
-.game-over, .win-game{
+.game-over, .win-game, .pause-game{
     margin: auto;
     padding: 30px;
     display: none;
@@ -195,7 +195,7 @@ body{
 
 
 
-.game-over button, .win-game button{
+.game-over button, .win-game button, .pause-game button{
     margin: 10px;
     width: 120px;
     height: 50px;
@@ -207,12 +207,17 @@ body{
 
 }
 
-.game-over button:hover, .win-game button:hover{
+.game-over button:hover, .win-game button:hover, .pause-game button:hover{
     transform: scale(1.05);
 }
 
 .win-game h4{
     font-size: 40px;
     color: greenyellow;
+}
+
+.pause-game h4{
+    font-size: 40px;
+    color: whitesmoke;
 }
 
