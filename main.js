@@ -42,24 +42,20 @@ const brickColors = {
 };
 
 
+const finalScore = document.querySelector("#final-score");
+const gameOver = document.querySelector(".game-over");
+
+const againBtn = document.querySelector(".again-btn");
+const backToMenuBtn = document.querySelector(".back-to-menu");
 
 
-//Các nút ở giao diện ban đầu
 playBtn.addEventListener("click", () => {
     mainMenu.style.display = "none";
     gameScreen.style.display = "flex";
 
-    paddleX = gameBoard.clientWidth / 2;
-    paddle.style.left = paddleX + "px";
+    resetGame();
 
-    ballX = gameBoard.clientWidth / 2;
-    ballY = gameBoard.clientHeight - 35 - ball.offsetWidth / 2;
-
-    ball.style.left = ballX + "px";
-    ball.style.top = ballY + "px";
-
-    isGameStart = true;
-    createBrickLv0();
+    createBrickLv1();
 
 })
 
@@ -71,6 +67,26 @@ chooseLevelBtn.addEventListener("click", () => {
 backBtn.addEventListener("click", () => {
     mainMenu.style.display = "flex";
     chooseLevel.style.display = "none";
+})
+
+
+
+againBtn.addEventListener("click", () => {
+    gameOver.style.display = "none";
+
+    resetGame();
+
+    createBrickLv1()
+})
+
+
+backToMenuBtn.addEventListener("click", () => {
+    mainMenu.style.display = "flex";
+    gameScreen.style.display = "none";
+    gameOver.style.display = "none";
+
+    isGameStart = false;
+    isMoving = false;
 })
 
 
@@ -101,6 +117,38 @@ document.addEventListener("keydown", function (event) {
 } )
 
 
+function resetBallAndPaddle(){
+    paddleX = gameBoard.clientWidth / 2;
+    paddle.style.left = paddleX + "px";
+
+    ballX = gameBoard.clientWidth / 2;
+    ballY = gameBoard.clientHeight - 35 - ball.offsetWidth / 2;
+
+    ball.style.left = ballX + "px";
+    ball.style.top = ballY + "px";
+
+    ballSpeedX = 1.5;
+    ballSpeedY = -1.5;
+
+    isMoving = false;
+}
+
+function resetGame(){
+    lives = 3;
+    score = 0;
+
+    textLives.textContent = lives;
+    textScore.textContent = score;
+
+    gameOver.style.display = "none";
+
+    bricks.forEach(brick => brick.remove());
+    bricks.length = 0;
+
+    resetBallAndPaddle();
+
+    isGameStart = true;
+}
 
 
 function ballMoving(){
@@ -144,21 +192,17 @@ function ballMoving(){
         lives--;
         textLives.textContent = lives;
 
-        isMoving = false;
-
-        paddleX = gameBoard.clientWidth / 2;
-        paddle.style.left = paddleX + "px";
-
-        ballX = gameBoard.clientWidth / 2;
-        ballY = gameBoard.clientHeight - 35 - ball.offsetWidth / 2;
-
-        ball.style.left = ballX + "px";
-        ball.style.top = ballY + "px";
+        if (lives <= 0){
+            isMoving = false;
+            isGameStart = false;
+            finalScore.textContent = score;
+            gameOver.style.display = "flex";
+            return;
+        }
 
 
-        ballSpeedX = 1.5;
-        ballSpeedY = -1.5;
-
+        resetBallAndPaddle();
+        return;
     }
 
     for (let i = bricks.length - 1; i >= 0; i--) {
@@ -206,7 +250,7 @@ document.addEventListener("keydown", function (event) {
 
 
 
-function createBrickLv0(){
+function createBrickLv1(){
     const brickRows = 8;
     const brickColumns = 6;
     const brickHeight = 15;

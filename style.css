@@ -163,3 +163,51 @@ body{
     border-radius: 5px;
     background-color: #BBDEFB;
 }
+
+
+
+
+
+
+.game-over{
+    margin: auto;
+    padding: 30px;
+    display: none;
+    position: absolute;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    border-radius: 15px;
+    border: 2px solid #BBDEFB;
+    background-color: darkslateblue;
+    color: white;
+    z-index: 10;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.game-over h4{
+    font-size: 40px;
+    color: red;
+}
+
+
+
+.game-over button{
+    margin: 10px;
+    width: 120px;
+    height: 50px;
+    border-radius: 15px;
+    padding: 15px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+
+}
+
+.game-over button:hover{
+    transform: scale(1.05);
+}
+
