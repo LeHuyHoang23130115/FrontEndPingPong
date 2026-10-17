@@ -221,3 +221,15 @@ body{
     color: whitesmoke;
 }
 
+
+.support-item{
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background-color: #dac49f;
+    border: 2px solid #FFFFFF;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+
+}

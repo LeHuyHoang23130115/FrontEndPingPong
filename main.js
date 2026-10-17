@@ -32,7 +32,12 @@ let isPause = false;
 let paddleX = 0;
 let ballX = 0;
 let ballY = 0;
+
+
 const bricks = [];
+const supportItems = [];
+
+let brickWithoutItem = 0;
 
 const brickColors = {
     1: "#BBDEFB",
@@ -187,6 +192,10 @@ function resetGame(){
     bricks.forEach(brick => brick.remove());
     bricks.length = 0;
 
+    brickWithoutItem = 0;
+    supportItems.forEach(item => item.remove());
+    supportItems.length = 0;
+
     resetBallAndPaddle();
 
     isGameStart = true;
@@ -260,12 +269,27 @@ function ballMoving(){
         const ballTop = ballY - ballRadius;
         const ballBottom = ballY + ballRadius;
 
+        const itemX = brickLeft + brick.offsetWidth / 2;
+        const itemY = brickTop + brick.offsetHeight / 2;
+
         if (ballRight >= brickLeft && ballLeft <= brickRight && ballBottom >= brickTop && ballTop <= brickBottom) {
             brick.remove();
             bricks.splice(i, 1);
 
             score += 10;
             textScore.textContent = score;
+
+            if (Math.random() < 0.15) {
+                createSupportItems(itemX, itemY);
+                brickWithoutItem = 0;
+            } else {
+                brickWithoutItem++;
+
+                if (brickWithoutItem === 5){
+                    createSupportItems(itemX, itemY);
+                    brickWithoutItem = 0;
+                }
+            }
 
             const overlapX = Math.min(ballRight - brickLeft, brickRight - ballLeft);
             const overlapY = Math.min(ballBottom - brickTop, brickBottom - ballTop);
@@ -288,6 +312,9 @@ function ballMoving(){
         return;
 
     }
+
+    itemMoving();
+    checkItemCollision();
 
     requestAnimationFrame(ballMoving);
 }
@@ -337,4 +364,51 @@ function createBrickLv1(){
 
 
 
+function createSupportItems(x, y){
+    const supportItem = document.createElement("div");
+    supportItem.classList.add("support-item");
 
+    supportItem.style.left = x + "px";
+    supportItem.style.top = y + "px";
+
+    gameBoard.appendChild(supportItem);
+    supportItems.push(supportItem);
+}
+
+
+function itemMoving() {
+    supportItems.forEach(item => {
+        let itemY = parseFloat(item.style.top);
+        itemY += 1;
+        item.style.top = itemY + "px";
+    });
+}
+
+
+function checkItemCollision(){
+    for (let i = supportItems.length -1; i >= 0; i--) {
+        const item = supportItems[i];
+
+        const itemLeft = item.offsetLeft - item.offsetWidth / 2;
+        const itemRight = item.offsetLeft + item.offsetWidth / 2;
+        const itemTop = item.offsetTop - item.offsetHeight / 2;
+        const itemBottom = item.offsetTop + item.offsetHeight / 2;
+
+        const paddleLeft = paddleX - paddle.offsetWidth / 2;
+        const paddleRight = paddleX + paddle.offsetWidth / 2;
+        const paddleTop = paddle.offsetTop;
+        const paddleBottom = paddleTop + paddle.offsetHeight;
+
+        if (itemRight >= paddleLeft && itemLeft <= paddleRight &&
+            itemBottom >= paddleTop && itemTop <= paddleBottom) {
+            item.remove();
+            supportItems.splice(i, 1);
+            continue;
+        }
+
+        if (itemTop > gameBoard.clientHeight) {
+            item.remove();
+            supportItems.splice(i, 1);
+        }
+    }
+}
