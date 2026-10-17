@@ -36,6 +36,11 @@ let ballY = 0;
 
 const bricks = [];
 const supportItems = [];
+const typeSupportItems = [
+    {type: "life", chance: 10 },
+    {type: "shield", chance: 45},
+    {type: "multiball", chance: 45}
+];
 
 let brickWithoutItem = 0;
 
@@ -243,6 +248,9 @@ function ballMoving(){
         lives--;
         textLives.textContent = lives;
 
+        supportItems.forEach(item => item.remove());
+        supportItems.length = 0;
+
         if (lives <= 0){
             isMoving = false;
             isGameStart = false;
@@ -280,13 +288,13 @@ function ballMoving(){
             textScore.textContent = score;
 
             if (Math.random() < 0.15) {
-                createSupportItems(itemX, itemY);
+                createSupportItems(itemX, itemY, "life");
                 brickWithoutItem = 0;
             } else {
                 brickWithoutItem++;
 
                 if (brickWithoutItem === 5){
-                    createSupportItems(itemX, itemY);
+                    createSupportItems(itemX, itemY, "life");
                     brickWithoutItem = 0;
                 }
             }
@@ -364,17 +372,25 @@ function createBrickLv1(){
 
 
 
-function createSupportItems(x, y){
+function createSupportItems(x, y, typeItem) {
     const supportItem = document.createElement("div");
     supportItem.classList.add("support-item");
+
+    supportItem.dataset.type = typeItem;
+    if (typeItem === "life") {
+        const img = document.createElement("img");
+        img.src = "image/life-item.png";
+        img.alt = "Life";
+        supportItem.appendChild(img);
+    }
 
     supportItem.style.left = x + "px";
     supportItem.style.top = y + "px";
 
     gameBoard.appendChild(supportItem);
     supportItems.push(supportItem);
-}
 
+}
 
 function itemMoving() {
     supportItems.forEach(item => {
@@ -385,8 +401,8 @@ function itemMoving() {
 }
 
 
-function checkItemCollision(){
-    for (let i = supportItems.length -1; i >= 0; i--) {
+function checkItemCollision() {
+    for (let i = supportItems.length - 1; i >= 0; i--) {
         const item = supportItems[i];
 
         const itemLeft = item.offsetLeft - item.offsetWidth / 2;
@@ -401,6 +417,9 @@ function checkItemCollision(){
 
         if (itemRight >= paddleLeft && itemLeft <= paddleRight &&
             itemBottom >= paddleTop && itemTop <= paddleBottom) {
+
+            applySupportItems(item.dataset.type);
+
             item.remove();
             supportItems.splice(i, 1);
             continue;
@@ -410,5 +429,28 @@ function checkItemCollision(){
             item.remove();
             supportItems.splice(i, 1);
         }
+    }
+}
+
+function randomSupportItems() {
+    const random = Math.random() * 100;
+
+    let sum = 0;
+
+    for (const item of typeSupportItems) {
+        sum += item.chance;
+
+        if (random < sum) {
+            return item.type;
+        }
+
+    }
+}
+
+
+function applySupportItems(typeItem) {
+    if (typeItem === "life" && lives < 3) {
+        lives++;
+        textLives.textContent = lives;
     }
 }
