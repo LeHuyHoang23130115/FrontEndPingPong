@@ -42,6 +42,9 @@ const typeSupportItems = [
     {type: "multiball", chance: 45}
 ];
 
+let isShieldActive = false;
+let shieldElement = null;
+
 let brickWithoutItem = 0;
 
 const brickColors = {
@@ -248,6 +251,8 @@ function ballMoving(){
         lives--;
         textLives.textContent = lives;
 
+        removeShield();
+
         supportItems.forEach(item => item.remove());
         supportItems.length = 0;
 
@@ -262,6 +267,16 @@ function ballMoving(){
 
         resetBallAndPaddle();
         return;
+    }
+
+    if (isShieldActive) {
+        const shieldTop = shieldElement.offsetTop;
+
+        if (ballY + ballRadius >= shieldTop) {
+            ballY = shieldTop - ballRadius;
+            ballSpeedY = -ballSpeedY;
+            removeShield();
+        }
     }
 
     for (let i = bricks.length - 1; i >= 0; i--) {
@@ -288,13 +303,13 @@ function ballMoving(){
             textScore.textContent = score;
 
             if (Math.random() < 0.15) {
-                createSupportItems(itemX, itemY, "life");
+                createSupportItems(itemX, itemY, "shield");
                 brickWithoutItem = 0;
             } else {
                 brickWithoutItem++;
 
                 if (brickWithoutItem === 5){
-                    createSupportItems(itemX, itemY, "life");
+                    createSupportItems(itemX, itemY, "shield");
                     brickWithoutItem = 0;
                 }
             }
@@ -382,6 +397,11 @@ function createSupportItems(x, y, typeItem) {
         img.src = "image/life-item.png";
         img.alt = "Life";
         supportItem.appendChild(img);
+    } else if (typeItem === "shield") {
+        const img = document.createElement("img");
+        img.src = "image/shield-item.jpg";
+        img.alt = "Shield";
+        supportItem.appendChild(img);
     }
 
     supportItem.style.left = x + "px";
@@ -447,10 +467,34 @@ function randomSupportItems() {
     }
 }
 
+function createShield(){
+    if (isShieldActive){
+        return;
+    }
+
+    const shield = document.createElement("div");
+    shield.classList.add("shield");
+
+    gameBoard.appendChild(shield);
+
+    shieldElement = shield;
+    isShieldActive = true;
+}
+
+function removeShield(){
+    if (isShieldActive){
+        shieldElement.remove();
+    }
+
+    shieldElement = null;
+    isShieldActive = false;
+}
 
 function applySupportItems(typeItem) {
     if (typeItem === "life" && lives < 3) {
         lives++;
         textLives.textContent = lives;
+    } else if (typeItem === "shield") {
+        createShield();
     }
 }
