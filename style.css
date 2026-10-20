@@ -251,3 +251,23 @@ body{
     background-color: #38BDF8;
     z-index: 2;
 }
+
+.arrow {
+    position: absolute;
+    width: 2px;
+    height: 30px;
+    background: white;
+    transform-origin: center bottom;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.arrow::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: -4px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 8px solid white;
+}

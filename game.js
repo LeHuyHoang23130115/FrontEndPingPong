@@ -21,6 +21,16 @@ let ballSpeedX = 1.5;
 let ballSpeedY = -1.5;
 
 
+const arrow = document.querySelector(".arrow");
+
+let aimAngle = 0;
+let aimDirection = 1;
+let lastAimTime = 0;
+
+const MAX_BALLS = 81;
+const balls = [];
+
+
 let score = 0;
 
 
@@ -165,11 +175,46 @@ document.addEventListener("keydown", function (event) {
     if (!isMoving) {
         ballX = paddleX;
         ball.style.left = ballX + "px";
+
+        if (balls.length > 0) {
+            balls[0].x = ballX;
+        }
     }
 } )
 
+function updateAim(time) {
+    const delta = lastAimTime ? Math.min((time - lastAimTime) / 1000, 0.05) : 0;
+    lastAimTime = time;
+
+    if (isGameStart && !isMoving && !isPause) {
+        aimAngle += aimDirection * 90 * delta;
+
+        if (aimAngle >= 60) {
+            aimAngle = 60;
+            aimDirection = -1;
+        } else if (aimAngle <= -60) {
+            aimAngle = -60;
+            aimDirection = 1;
+        }
+
+        arrow.style.display = "block";
+        arrow.style.left = ballX + "px";
+        arrow.style.top = (ballY - 30) + "px";
+        arrow.style.transform = `translateX(-50%) rotate(${aimAngle}deg)`;
+    } else {
+        arrow.style.display = "none";
+    }
+
+    requestAnimationFrame(updateAim);
+}
+
+requestAnimationFrame(updateAim);
 
 function resetBallAndPaddle(){
+    if (!ball.isConnected) {
+        gameBoard.appendChild(ball);
+    }
+
     paddleX = gameBoard.clientWidth / 2;
     paddle.style.left = paddleX + "px";
 
@@ -181,6 +226,9 @@ function resetBallAndPaddle(){
 
     ballSpeedX = 1.5;
     ballSpeedY = -1.5;
+
+    aimAngle = 0;
+    aimDirection = 1;
 
     isMoving = false;
 }
@@ -205,49 +253,150 @@ function resetGame(){
     supportItems.length = 0;
 
     resetBallAndPaddle();
+    initBalls();
 
     isGameStart = true;
 }
 
+function initBalls() {
+    balls.forEach(b => {
+        if (b.element !== ball) b.element.remove();
+    });
 
-function ballMoving(){
-    if (!isGameStart || !isMoving || isPause){
+    balls.length = 0;
+
+    if (!ball.isConnected) {
+        gameBoard.appendChild(ball);
+    }
+
+    balls.push({
+        element: ball,
+        x: ballX,
+        y: ballY,
+        speedX: ballSpeedX,
+        speedY: ballSpeedY
+    });
+}
+
+
+function ballMoving() {
+    if (!isGameStart || !isMoving || isPause) {
         return;
     }
-    ballX += ballSpeedX;
-    ballY += ballSpeedY;
 
-    const ballRadius = ball.offsetWidth / 2;
+    // Chuyển động của từng ball
+    for (let j = balls.length - 1; j >= 0; j--) {
+        const b = balls[j];
 
-    if (ballX <= ballRadius || ballX >= gameBoard.clientWidth - ballRadius) {
-        ballSpeedX = -ballSpeedX;
+        b.x += b.speedX;
+        b.y += b.speedY;
+
+        const ballRadius = b.element.offsetWidth / 2;
+
+        // Chạm tường
+        if (b.x <= ballRadius || b.x >= gameBoard.clientWidth - ballRadius) {
+            b.speedX = -b.speedX;
+        }
+
+        if (b.y <= ballRadius) {
+            b.speedY = -b.speedY;
+        }
+
+
+        // Check shield
+        if (isShieldActive && b.speedY > 0) {
+            const shieldTop = shieldElement.offsetTop;
+
+            if (b.y + ballRadius >= shieldTop) {
+                b.y = shieldTop - ballRadius;
+                b.speedY = -b.speedY;
+                removeShield();
+            }
+        }
+
+
+
+        // Check va chạm paddle
+        const paddleLeft = paddleX - paddle.offsetWidth / 2;
+        const paddleRight = paddleX + paddle.offsetWidth / 2;
+        const paddleTop = paddle.offsetTop;
+        const paddleBottom = paddle.offsetTop + paddle.offsetHeight;
+
+
+        if (
+            b.y + ballRadius >= paddleTop &&
+            b.y - ballRadius <= paddleBottom &&
+            b.x >= paddleLeft &&
+            b.x <= paddleRight &&
+            b.speedY > 0
+        ) {
+            b.y = paddleTop - ballRadius;
+            b.speedY = -b.speedY;
+        }
+
+
+        // Check rớt khỏi game
+        if (b.y - ballRadius > gameBoard.clientHeight) {
+            b.element.remove();
+            balls.splice(j, 1);
+            continue;
+        }
+
+
+
+
+        // Va chạm brick và ramdom item
+        for (let i = bricks.length - 1; i >= 0; i--) {
+            const brick = bricks[i];
+
+            const brickLeft = brick.offsetLeft;
+            const brickTop = brick.offsetTop;
+            const brickRight = brick.offsetLeft + brick.offsetWidth;
+            const brickBottom = brick.offsetTop + brick.offsetHeight;
+
+            const ballLeft = b.x - ballRadius;
+            const ballRight = b.x + ballRadius;
+            const ballTop = b.y - ballRadius;
+            const ballBottom = b.y + ballRadius;
+
+            const itemX = brickLeft + brick.offsetWidth / 2;
+            const itemY = brickTop + brick.offsetHeight / 2;
+
+            if (ballRight >= brickLeft && ballLeft <= brickRight && ballBottom >= brickTop && ballTop <= brickBottom) {
+                brick.remove();
+                bricks.splice(i, 1);
+
+                score += 10;
+                textScore.textContent = score;
+
+                if (Math.random() < 0.15) {
+                    createSupportItems(itemX, itemY, randomSupportItems());
+                    brickWithoutItem = 0;
+                } else {
+                    brickWithoutItem++;
+
+                    if (brickWithoutItem === 5) {
+                        createSupportItems(itemX, itemY, randomSupportItems());
+                        brickWithoutItem = 0;
+                    }
+                }
+
+                const overlapX = Math.min(ballRight - brickLeft, brickRight - ballLeft);
+                const overlapY = Math.min(ballBottom - brickTop, brickBottom - ballTop);
+
+                if (overlapX < overlapY) {
+                    b.speedX = -b.speedX;
+                } else {
+                    b.speedY = -b.speedY;
+                }
+            }
+        }
+
+        b.element.style.left = b.x + "px";
+        b.element.style.top = b.y + "px";
     }
 
-    if (ballY <= ballRadius) {
-        ballSpeedY = -ballSpeedY;
-    }
-
-    const paddleLeft = paddleX - paddle.offsetWidth / 2;
-    const paddleRight = paddleX + paddle.offsetWidth / 2;
-    const paddleTop = paddle.offsetTop;
-    const paddleBottom =  paddle.offsetTop + paddle.offsetHeight;
-
-
-    if (
-        ballY + ballRadius >= paddleTop &&
-        ballY - ballRadius <= paddleBottom &&
-        ballX >= paddleLeft &&
-        ballX <= paddleRight &&
-        ballSpeedY > 0
-    ) {
-        ballSpeedY = -ballSpeedY;
-    }
-
-
-    ball.style.left = ballX + "px";
-    ball.style.top = ballY + "px";
-
-    if (ballY > gameBoard.clientHeight){
+    if (balls.length === 0) {
         lives--;
         textLives.textContent = lives;
 
@@ -256,7 +405,7 @@ function ballMoving(){
         supportItems.forEach(item => item.remove());
         supportItems.length = 0;
 
-        if (lives <= 0){
+        if (lives <= 0) {
             isMoving = false;
             isGameStart = false;
             finalScore.textContent = score;
@@ -266,63 +415,9 @@ function ballMoving(){
 
 
         resetBallAndPaddle();
+        ball.style.display = "block";
+        initBalls();
         return;
-    }
-
-    if (isShieldActive) {
-        const shieldTop = shieldElement.offsetTop;
-
-        if (ballY + ballRadius >= shieldTop) {
-            ballY = shieldTop - ballRadius;
-            ballSpeedY = -ballSpeedY;
-            removeShield();
-        }
-    }
-
-    for (let i = bricks.length - 1; i >= 0; i--) {
-        const brick = bricks[i];
-
-        const brickLeft = brick.offsetLeft;
-        const brickTop = brick.offsetTop;
-        const brickRight = brick.offsetLeft + brick.offsetWidth;
-        const brickBottom = brick.offsetTop + brick.offsetHeight;
-
-        const ballLeft = ballX - ballRadius;
-        const ballRight = ballX + ballRadius;
-        const ballTop = ballY - ballRadius;
-        const ballBottom = ballY + ballRadius;
-
-        const itemX = brickLeft + brick.offsetWidth / 2;
-        const itemY = brickTop + brick.offsetHeight / 2;
-
-        if (ballRight >= brickLeft && ballLeft <= brickRight && ballBottom >= brickTop && ballTop <= brickBottom) {
-            brick.remove();
-            bricks.splice(i, 1);
-
-            score += 10;
-            textScore.textContent = score;
-
-            if (Math.random() < 0.15) {
-                createSupportItems(itemX, itemY, "shield");
-                brickWithoutItem = 0;
-            } else {
-                brickWithoutItem++;
-
-                if (brickWithoutItem === 5){
-                    createSupportItems(itemX, itemY, "shield");
-                    brickWithoutItem = 0;
-                }
-            }
-
-            const overlapX = Math.min(ballRight - brickLeft, brickRight - ballLeft);
-            const overlapY = Math.min(ballBottom - brickTop, brickBottom - ballTop);
-
-            if (overlapX < overlapY) {
-                ballSpeedX = -ballSpeedX;
-            } else {
-                ballSpeedY = -ballSpeedY;
-            }
-        }
     }
 
     if (bricks.length === 0){
@@ -344,7 +439,18 @@ function ballMoving(){
 
 document.addEventListener("keydown", function (event) {
     if (event.key == " " && isGameStart && !isMoving && !isPause){
+        event.preventDefault();
+
+        const speed = Math.hypot(ballSpeedX, ballSpeedY);
+        const rad = aimAngle * Math.PI / 180;
+
+        balls[0].speedX = speed * Math.sin(rad);
+        balls[0].speedY = -speed * Math.cos(rad);
+
         isMoving = true;
+
+        arrow.style.display = "none";
+
         ballMoving();
     }
 })
@@ -401,6 +507,11 @@ function createSupportItems(x, y, typeItem) {
         const img = document.createElement("img");
         img.src = "image/shield-item.jpg";
         img.alt = "Shield";
+        supportItem.appendChild(img);
+    } else if (typeItem === "multiball") {
+        const img = document.createElement("img");
+        img.src = "image/item-multiball.png";
+        img.alt = "MultiBall";
         supportItem.appendChild(img);
     }
 
@@ -490,11 +601,55 @@ function removeShield(){
     isShieldActive = false;
 }
 
+
+
+function createMultiBall() {
+    const currentBalls = [...balls];
+
+    for (const b of currentBalls) {
+        if (balls.length + 2 > MAX_BALLS) break;
+
+        const angle = Math.PI / 6;
+
+        for (const direction of [-1, 1]) {
+            const rad = angle * direction;
+
+            const newBall = b.element.cloneNode(true);
+            newBall.removeAttribute("id");
+
+            const speedX = b.speedX * Math.cos(rad) - b.speedY * Math.sin(rad);
+            const speedY = b.speedX * Math.sin(rad) + b.speedY * Math.cos(rad);
+
+
+            newBall.style.left = b.x + "px";
+            newBall.style.top = b.y + "px";
+
+            gameBoard.appendChild(newBall);
+
+            balls.push({
+                element: newBall,
+                x: b.x,
+                y: b.y,
+                speedX: speedX,
+                speedY: speedY
+            });
+        }
+    }
+}
+
+
+
 function applySupportItems(typeItem) {
     if (typeItem === "life" && lives < 3) {
         lives++;
         textLives.textContent = lives;
     } else if (typeItem === "shield") {
         createShield();
+    } else if (typeItem === "multiball"){
+        createMultiBall();
     }
 }
+
+
+
+
