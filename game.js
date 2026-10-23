@@ -3,7 +3,11 @@ const gameScreen = document.querySelector(".game-screen");
 const chooseLevel = document.querySelector(".choose-level");
 
 const playBtn = document.querySelector("#play-btn");
+
 const chooseLevelBtn = document.querySelector("#select-level");
+const levelBtns = document.querySelectorAll(".btn-level");
+
+
 const backBtn = document.querySelector("#choose-level-back");
 
 const textLives = document.querySelector("#live");
@@ -27,7 +31,7 @@ let aimAngle = 0;
 let aimDirection = 1;
 let lastAimTime = 0;
 
-const MAX_BALLS = 81;
+const MAX_BALLS =9;
 const balls = [];
 
 
@@ -77,19 +81,17 @@ const winGame = document.querySelector(".win-game");
 const winScore = document.querySelector("#win-score");
 const nextLevelBtn = document.querySelectorAll(".nextLevel");
 
+let currentLevel = 1;
 
 const pauseGame = document.querySelector(".pause-game");
 const pauseScore = document.querySelector("#pause-score");
 const continueBtn = document.querySelectorAll(".continue-btn");
 
 
+
+
 playBtn.addEventListener("click", () => {
-    mainMenu.style.display = "none";
-    gameScreen.style.display = "flex";
-
-    resetGame();
-
-    createBrickLv1();
+    startLevel(1);
 
 })
 
@@ -98,17 +100,31 @@ chooseLevelBtn.addEventListener("click", () => {
     chooseLevel.style.display = "flex";
 })
 
+
+levelBtns.forEach((btn, index) =>{
+    btn.addEventListener("click", () => {
+        startLevel(index + 1);
+    })
+})
+
+
+
+
 backBtn.addEventListener("click", () => {
     mainMenu.style.display = "flex";
     chooseLevel.style.display = "none";
 })
 
 
+nextLevelBtn.forEach((btn) =>{
+    btn.addEventListener("click", () => {
+        startLevel(currentLevel + 1);
+    })
+})
+
 againBtn.forEach((btn) => {
     btn.addEventListener("click", () => {
-        resetGame();
-
-        createBrickLv1()
+        startLevel(currentLevel)
     })
 })
 
@@ -288,6 +304,9 @@ function ballMoving() {
     for (let j = balls.length - 1; j >= 0; j--) {
         const b = balls[j];
 
+        const oldX = b.x;
+        const oldY = b.y;
+
         b.x += b.speedX;
         b.y += b.speedY;
 
@@ -331,7 +350,19 @@ function ballMoving() {
             b.speedY > 0
         ) {
             b.y = paddleTop - ballRadius;
-            b.speedY = -b.speedY;
+
+            const hitPosition = (b.x - paddleX) / (paddle.offsetWidth / 2);
+
+            const hit = Math.max(-1, Math.min(1, hitPosition));
+
+            const maxAngle = Math.PI / 3;
+
+            let angle = hit * maxAngle;
+
+            const speed = Math.hypot(b.speedX, b.speedY);
+
+            b.speedX = speed * Math.sin(angle);
+            b.speedY = -speed * Math.cos(angle);
         }
 
 
@@ -363,32 +394,68 @@ function ballMoving() {
             const itemY = brickTop + brick.offsetHeight / 2;
 
             if (ballRight >= brickLeft && ballLeft <= brickRight && ballBottom >= brickTop && ballTop <= brickBottom) {
-                brick.remove();
-                bricks.splice(i, 1);
+                if (!brick.classList.contains('unbreakBrick')) {
+                    brick.remove();
+                    bricks.splice(i, 1);
 
-                score += 10;
-                textScore.textContent = score;
+                    score += 10;
+                    textScore.textContent = score;
 
-                if (Math.random() < 0.15) {
-                    createSupportItems(itemX, itemY, randomSupportItems());
-                    brickWithoutItem = 0;
-                } else {
-                    brickWithoutItem++;
-
-                    if (brickWithoutItem === 5) {
+                    if (Math.random() < 0.15) {
                         createSupportItems(itemX, itemY, randomSupportItems());
                         brickWithoutItem = 0;
+                    } else {
+                        brickWithoutItem++;
+
+                        if (brickWithoutItem === 5) {
+                            createSupportItems(itemX, itemY, randomSupportItems());
+                            brickWithoutItem = 0;
+                        }
                     }
                 }
 
-                const overlapX = Math.min(ballRight - brickLeft, brickRight - ballLeft);
-                const overlapY = Math.min(ballBottom - brickTop, brickBottom - ballTop);
+                const fromLeft = oldX + ballRadius <= brickLeft;
+                const fromRight = oldX - ballRadius >= brickRight;
+                const fromTop = oldY + ballRadius <= brickTop;
+                const fromBottom = oldY - ballRadius >= brickBottom;
 
-                if (overlapX < overlapY) {
+                if (fromLeft && b.speedX > 0) {
+                    b.x = brickLeft - ballRadius;
                     b.speedX = -b.speedX;
-                } else {
+                } else if (fromRight && b.speedX < 0) {
+                    b.x = brickRight + ballRadius;
+                    b.speedX = -b.speedX;
+                } else if (fromTop && b.speedY > 0) {
+                    b.y = brickTop - ballRadius;
                     b.speedY = -b.speedY;
+                } else if (fromBottom && b.speedY < 0) {
+                    b.y = brickBottom + ballRadius;
+                    b.speedY = -b.speedY;
+                } else {
+
+                    const overlapX = Math.min(ballRight - brickLeft, brickRight - ballLeft);
+                    const overlapY = Math.min(ballBottom - brickTop, brickBottom - ballTop);
+
+                    if (overlapX < overlapY) {
+                        if (b.x < (brickLeft + brickRight) / 2) {
+                            b.x = brickLeft - ballRadius;
+                            b.speedX = -Math.abs(b.speedX);
+                        } else {
+                            b.x = brickRight + ballRadius;
+                            b.speedX = Math.abs(b.speedX);
+                        }
+                    } else {
+                        if (b.y < (brickTop + brickBottom) / 2) {
+                            b.y = brickTop - ballRadius;
+                            b.speedY = -Math.abs(b.speedY);
+                        } else {
+                            b.y = brickBottom + ballRadius;
+                            b.speedY = Math.abs(b.speedY);
+                        }
+                    }
                 }
+
+                break;
             }
         }
 
@@ -420,7 +487,7 @@ function ballMoving() {
         return;
     }
 
-    if (bricks.length === 0){
+    if (!bricks.some(brick => brick.classList.contains('normalBrick'))) {
         isMoving = false;
         isGameStart = false;
 
@@ -457,6 +524,24 @@ document.addEventListener("keydown", function (event) {
 
 
 
+function startLevel(level){
+    currentLevel = level;
+
+    mainMenu.style.display = "none";
+    chooseLevel.style.display = "none";
+    gameScreen.style.display = "flex";
+
+    resetGame();
+    removeShield();
+    ball.style.display = "block";
+
+    if (level === 1) {
+        createBrickLv1();
+    } else if (level === 2) {
+        createBrickLv2();
+    }
+}
+
 
 
 function createBrickLv1(){
@@ -490,6 +575,94 @@ function createBrickLv1(){
         }
     }
 }
+
+
+
+function createBrickLv2() {
+    const brickRows = 8;
+    const brickColumns = 10;
+    const brickHeight = 15;
+    const brickWidth = 75;
+    const gapBrickHeight = 25;
+    const gapBrickWidth = 25;
+
+    const bricksTotalWidth = brickColumns * brickWidth + (brickColumns - 1) * gapBrickWidth;
+    const bricksTotalHeight = brickRows * brickHeight + (brickRows - 1) * gapBrickHeight;
+    const brickStartX = (gameBoard.clientWidth - bricksTotalWidth) / 2;
+    const brickStartY = 60;
+
+    function addBrick(x, y, type) {
+        const brick = document.createElement("div");
+        brick.classList.add("brick", type);
+
+        brick.style.left = x + "px";
+        brick.style.top = y + "px";
+
+        gameBoard.appendChild(brick);
+        bricks.push(brick);
+    }
+
+    // Tạo gạch thường
+    for (let row = 0; row < brickRows; row++) {
+        for (let col = 0; col < brickColumns; col++) {
+            if (row >= 2 && row <= 5 && col >= 2 && col <= 7) continue;
+
+            const x = brickStartX + col * (brickWidth + gapBrickWidth);
+            const y = brickStartY + row * (brickHeight + gapBrickHeight);
+
+            addBrick(x, y, "normalBrick");
+        }
+    }
+
+    const size = 15;
+
+    // Khung ở giữa
+    function addUnbreakFrame(x, y, cols, rows) {
+        // Cạnh trên và dưới
+        for (let col = 0; col < cols; col++) {
+            addBrick(x + col * size, y, "unbreakBrick");
+            addBrick(x + col * size, y + (rows - 1) * size, "unbreakBrick");
+        }
+
+        // Cạnh trái và phải
+        for (let row = 1; row < rows - 1; row++) {
+            addBrick(x, y + row * size, "unbreakBrick");
+            addBrick(x + (cols - 1) * size, y + row * size, "unbreakBrick");
+        }
+    }
+
+    const startFrameCenterX = brickStartX + 2 * (brickWidth + gapBrickWidth);
+    const startFrameCenterY = brickStartY + 2 * (brickHeight + gapBrickHeight);
+
+    addUnbreakFrame(startFrameCenterX, startFrameCenterY, 38, 9);
+
+
+    // 4 góc
+    function addCorner(x, y, directionX, directionY) {
+        for (let i = 0; i < 28; i++) {
+            addBrick(x + i * size * directionX, y, "unbreakBrick");
+        }
+
+        for (let i = 1; i < 10; i++) {
+            addBrick(x, y + i * size * directionY, "unbreakBrick");
+        }
+    }
+
+    const leftX = brickStartX - 25;
+    const rightX = brickStartX + bricksTotalWidth + 10;
+    const topY = brickStartY - 25;
+    const bottomY = brickStartY + bricksTotalHeight + 15;
+
+    addCorner(leftX, topY, 1 , 1);
+    addCorner(rightX, topY, -1 , 1);
+    addCorner(leftX, bottomY, 1 , -1);
+    addCorner(rightX, bottomY, -1 , -1);
+}
+
+
+
+
+
 
 
 

@@ -166,9 +166,6 @@ body{
 
 
 
-
-
-
 .game-over, .win-game, .pause-game{
     margin: auto;
     padding: 30px;
@@ -270,4 +267,13 @@ body{
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
     border-bottom: 8px solid white;
+}
+
+.unbreakBrick{
+    width: 15px;
+    height: 15px;
+    background-color: #616161;
+    border: 2px solid #424242;
+    box-sizing: border-box;
+    border-radius: 5px;
 }
