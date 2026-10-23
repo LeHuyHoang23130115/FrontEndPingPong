@@ -277,3 +277,47 @@ body{
     box-sizing: border-box;
     border-radius: 5px;
 }
+
+.healingBrick {
+    width: 75px;
+    height: 15px;
+    background-color: #F59E0B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    border: 1px solid #FBBF24;
+    box-sizing: border-box;
+}
+
+.healed {
+    animation: healFlash 0.5s ease;
+}
+
+@keyframes healFlash {
+    0% {
+        box-shadow: none;
+    }
+
+    50% {
+        box-shadow: 0 0 15px 5px #4ade80;
+    }
+
+    100% {
+        box-shadow: none;
+    }
+}
+
+
+.healingBrick.hit {
+    animation: healingHit 0.2s ease;
+}
+
+@keyframes healingHit {
+    50% {
+        background-color: #ef4444;
+        box-shadow: 0 0 12px 4px #ef4444;
+    }
+}
