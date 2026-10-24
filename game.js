@@ -12,6 +12,7 @@ const backBtn = document.querySelector("#choose-level-back");
 
 const textLives = document.querySelector("#live");
 const textScore = document.querySelector("#score");
+const textCurrentLv = document.querySelector("#current-lv");
 
 const gameBoard = document.querySelector(".game-board");
 const paddle = document.querySelector(".paddle");
@@ -51,9 +52,9 @@ let ballY = 0;
 const bricks = [];
 const supportItems = [];
 const typeSupportItems = [
-    {type: "life", chance: 10 },
-    {type: "shield", chance: 45},
-    {type: "multiball", chance: 45}
+    {type: "life", chance: 20 },
+    {type: "shield", chance: 30},
+    {type: "multiball", chance: 50}
 ];
 
 let isShieldActive = false;
@@ -84,9 +85,7 @@ const continueBtn = document.querySelectorAll(".continue-btn");
 const brickColors = {
     1: "#BBDEFB",
     2: "#64B5F6",
-    3: "#2196F3",
-    4: "#1976D2",
-    5: "#0D47A1"
+    3: "#2196F3"
 };
 
 let lastHealTime = 0;
@@ -425,9 +424,18 @@ function  ballMoving() {
             const itemY = brickTop + brick.offsetHeight / 2;
 
             if (ballRight >= brickLeft && ballLeft <= brickRight && ballBottom >= brickTop && ballTop <= brickBottom) {
-                if (!brick.classList.contains('unbreakBrick')) {
+
+                const isCore = currentLevel === 6 && brick.classList.contains("coreBrick");
+                const coreLocked = isCore && bricks.some(brick => brick.classList.contains("normalBrick"));
+
+                if (!brick.classList.contains('unbreakBrick') && !coreLocked) {
+
 
                     const isDestroy = damageToBrick(brick);
+
+                    if (isCore && !isDestroy) {
+                        createCoreGuards(Number(brick.dataset.hp));
+                    }
 
                     if (brick.classList.contains("healingBrick") && !isDestroy) {
                         brick.classList.remove("hit");
@@ -445,7 +453,9 @@ function  ballMoving() {
                         brick.remove();
                         bricks.splice(i, 1);
 
-                        if (brick.classList.contains("healingBrick")) {
+                        if (brick.classList.contains("coreBrick")) {
+                            score += 100;
+                        } else if (brick.classList.contains("healingBrick")) {
                             score += 50;
                         } else if (brick.classList.contains("spawnerBrick")) {
                             score += 50;
@@ -518,6 +528,8 @@ function  ballMoving() {
         b.element.style.top = b.y + "px";
     }
 
+    updateCoreState();
+
     if (balls.length === 0) {
         lives--;
         textLives.textContent = lives;
@@ -542,19 +554,32 @@ function  ballMoving() {
         return;
     }
 
-    if (!bricks.some(brick => brick.classList.contains('normalBrick')
-        || brick.classList.contains('healingBrick')
-        || brick.classList.contains('spawnerBrick'))) {
+    if (currentLevel === 6){
+        if (!bricks.some(brick => brick.classList.contains("coreBrick"))){
+            isMoving = false;
+            isGameStart = false;
+
+            winScore.textContent = score;
+
+            winGame.style.display = "flex";
+            return;
+        }
+
+    } else {
+        if (!bricks.some(brick => brick.classList.contains('normalBrick')
+            || brick.classList.contains('healingBrick')
+            || brick.classList.contains('spawnerBrick'))) {
 
 
-        isMoving = false;
-        isGameStart = false;
+            isMoving = false;
+            isGameStart = false;
 
-        winScore.textContent = score;
+            winScore.textContent = score;
 
-        winGame.style.display = "flex";
-        return;
+            winGame.style.display = "flex";
+            return;
 
+        }
     }
 
     itemMoving();
@@ -605,6 +630,12 @@ document.addEventListener("keydown", function (event) {
 function startLevel(level){
     currentLevel = level;
 
+    textCurrentLv.textContent = currentLevel;
+
+    nextLevelBtn.forEach(btn => {
+        btn.style.display = currentLevel === 6 ? "none" : "inline-block";
+    });
+
     mainMenu.style.display = "none";
     chooseLevel.style.display = "none";
     gameScreen.style.display = "flex";
@@ -626,6 +657,8 @@ function startLevel(level){
         lastSpawnTime = performance.now();
     } else if (level === 5) {
         createBrickLv5();
+    } else if (level === 6) {
+        createBrickLv6();
     }
 }
 
@@ -640,6 +673,8 @@ function addBrick(x, y, type) {
 
     gameBoard.appendChild(brick);
     bricks.push(brick);
+
+    return brick;
 }
 
 
@@ -997,26 +1032,91 @@ function createBrickLv5() {
 
 
 
+function createBrickLv6(){
+    const coreWidth = 120;
+    const coreHeight = 120;
+
+    const centerX = gameBoard.clientWidth / 2;
+    const centerY =  220;
+
+    const core = addBrick(centerX - coreWidth / 2, centerY - coreHeight / 2, "coreBrick");
+
+    core.dataset.hp = String(3);
+    core.textContent = "3 HP";
+
+    createCoreGuards(3);
+    updateCoreState();
+}
+
+
+function createCoreGuards(coreHP) {
+    const centerX = gameBoard.clientWidth / 2;
+    const centerY = 220;
+
+    const positions = {
+        3: [
+            [-180, 0], [180, 0]
+        ],
+
+        2: [
+            [-200, -110], [200, -110],
+            [-200, 110], [200, 110]
+        ],
+
+        1: [
+            [-200, -110], [0, -110],[200, -110],
+            [-200, 0],[200, 0],
+            [-200, 110], [0, 110],[200, 110]
+        ]
+    };
+
+    for (const [dx, dy] of positions[coreHP] || []) {
+        const brick = addBrick(
+            centerX + dx - 75 / 2,
+            centerY + dy - 15 / 2,
+            "normalBrick"
+        );
+
+        let hp = coreHP === 3 ? 1 : 2;
+
+        if (coreHP === 1 && dx !== 0 && dy !== 0) {
+            hp = 3;
+        }
+
+        brick.dataset.hp = String(hp);
+        brick.dataset.maxHp = String(hp);
+        brick.style.backgroundColor = brickColors[hp];
+    }
+}
+
+
+function updateCoreState() {
+    if (currentLevel !== 6) return;
+
+    const core = bricks.find(brick => brick.classList.contains("coreBrick"));
+    if (!core) return;
+
+    const isLocked = bricks.some(brick => brick.classList.contains("normalBrick"));
+
+    core.style.backgroundColor = isLocked ? "#475569" : "#16a34a";
+    core.style.borderColor = isLocked ? "#94a3b8" : "#4ade80";
+    core.textContent = core.dataset.hp + " HP";
+}
+
+
+
+
 function createSupportItems(x, y, typeItem) {
     const supportItem = document.createElement("div");
     supportItem.classList.add("support-item");
 
     supportItem.dataset.type = typeItem;
     if (typeItem === "life") {
-        const img = document.createElement("img");
-        img.src = "image/life-item.png";
-        img.alt = "Life";
-        supportItem.appendChild(img);
+        supportItem.textContent = "♥";
     } else if (typeItem === "shield") {
-        const img = document.createElement("img");
-        img.src = "image/shield-item.jpg";
-        img.alt = "Shield";
-        supportItem.appendChild(img);
+        supportItem.textContent = "◆";
     } else if (typeItem === "multiball") {
-        const img = document.createElement("img");
-        img.src = "image/item-multiball.png";
-        img.alt = "MultiBall";
-        supportItem.appendChild(img);
+        supportItem.textContent = "×3";
     }
 
     supportItem.style.left = x + "px";
