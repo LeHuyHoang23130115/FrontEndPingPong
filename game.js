@@ -7,8 +7,11 @@ const playBtn = document.querySelector("#play-btn");
 const chooseLevelBtn = document.querySelector("#select-level");
 const levelBtns = document.querySelectorAll(".btn-level");
 
+const instructions = document.querySelector(".instructions");
+const instructionsBtn = document.querySelector(".btn-how-to-pay");
 
-const backBtn = document.querySelector("#choose-level-back");
+
+const backBtn = document.querySelectorAll(".btn-back");
 
 const textLives = document.querySelector("#live");
 const textScore = document.querySelector("#score");
@@ -18,7 +21,7 @@ const gameBoard = document.querySelector(".game-board");
 const paddle = document.querySelector(".paddle");
 
 
-const paddleSpeed = 20;
+const paddleSpeed = 15;
 
 
 const ball = document.querySelector(".ball");
@@ -133,11 +136,18 @@ levelBtns.forEach((btn, index) =>{
 })
 
 
+instructionsBtn.addEventListener("click", () => {
+    mainMenu.style.display = "none";
+    instructions.style.display = "flex";
+});
 
 
-backBtn.addEventListener("click", () => {
-    mainMenu.style.display = "flex";
-    chooseLevel.style.display = "none";
+backBtn.forEach((btn) =>{
+    btn.addEventListener("click", () => {
+        mainMenu.style.display = "flex";
+        chooseLevel.style.display = "none";
+        instructions.style.display = "none";
+    })
 })
 
 
@@ -479,44 +489,24 @@ function  ballMoving() {
                     }
                 }
 
-                const fromLeft = oldX + ballRadius <= brickLeft;
-                const fromRight = oldX - ballRadius >= brickRight;
-                const fromTop = oldY + ballRadius <= brickTop;
-                const fromBottom = oldY - ballRadius >= brickBottom;
+                const overlapX = Math.min(ballRight - brickLeft, brickRight - ballLeft);
+                const overlapY = Math.min(ballBottom - brickTop, brickBottom - ballTop);
 
-                if (fromLeft && b.speedX > 0) {
-                    b.x = brickLeft - ballRadius;
-                    b.speedX = -b.speedX;
-                } else if (fromRight && b.speedX < 0) {
-                    b.x = brickRight + ballRadius;
-                    b.speedX = -b.speedX;
-                } else if (fromTop && b.speedY > 0) {
-                    b.y = brickTop - ballRadius;
-                    b.speedY = -b.speedY;
-                } else if (fromBottom && b.speedY < 0) {
-                    b.y = brickBottom + ballRadius;
-                    b.speedY = -b.speedY;
-                } else {
-
-                    const overlapX = Math.min(ballRight - brickLeft, brickRight - ballLeft);
-                    const overlapY = Math.min(ballBottom - brickTop, brickBottom - ballTop);
-
-                    if (overlapX < overlapY) {
-                        if (b.x < (brickLeft + brickRight) / 2) {
-                            b.x = brickLeft - ballRadius;
-                            b.speedX = -Math.abs(b.speedX);
-                        } else {
-                            b.x = brickRight + ballRadius;
-                            b.speedX = Math.abs(b.speedX);
-                        }
+                if (overlapX < overlapY) {
+                    if (b.x < (brickLeft + brickRight) / 2) {
+                        b.x = brickLeft - ballRadius - 0.01;
+                        b.speedX = -Math.abs(b.speedX);
                     } else {
-                        if (b.y < (brickTop + brickBottom) / 2) {
-                            b.y = brickTop - ballRadius;
-                            b.speedY = -Math.abs(b.speedY);
-                        } else {
-                            b.y = brickBottom + ballRadius;
-                            b.speedY = Math.abs(b.speedY);
-                        }
+                        b.x = brickRight + ballRadius + 0.01;
+                        b.speedX = Math.abs(b.speedX);
+                    }
+                } else {
+                    if (b.y < (brickTop + brickBottom) / 2) {
+                        b.y = brickTop - ballRadius - 0.01;
+                        b.speedY = -Math.abs(b.speedY);
+                    } else {
+                        b.y = brickBottom + ballRadius + 0.01;
+                        b.speedY = Math.abs(b.speedY);
                     }
                 }
 
@@ -1222,7 +1212,9 @@ function createMultiBall() {
             newBall.removeAttribute("id");
 
             const speedX = b.speedX * Math.cos(rad) - b.speedY * Math.sin(rad);
-            const speedY = b.speedX * Math.sin(rad) + b.speedY * Math.cos(rad);
+            let speedY = b.speedX * Math.sin(rad) + b.speedY * Math.cos(rad);
+
+            if (Math.abs(speedY) < 0.5) speedY = -0.5;
 
 
             newBall.style.left = b.x + "px";

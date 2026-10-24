@@ -1,9 +1,457 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <title>Ping Pong Game</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body{
+            font-family: 'Arial', sans-serif;
+            background-color: #200975;
+        }
+
+        .main-menu{
+            min-height: 100vh;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-menu h1{
+            font-size: 50px;
+            margin-bottom: 60px;
+            color: white;
+        }
+
+        .menu-btn{
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+
+        }
+
+        .menu-btn button{
+            min-width: 250px;
+            padding: 15px 10px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .menu-btn button:hover{
+            transform: scale(1.05);
+
+        }
+
+
+
+        .choose-level{
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .choose-level h2{
+            font-size: 40px;
+            margin-bottom: 50px;
+            color: white;
+        }
+
+        .levels{
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+
+        .btn-level{
+            width: 100px;
+            height: 50px;
+            border-radius: 15px;
+            padding: 15px 10px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-level:hover{
+            transform: scale(1.05);
+        }
+
+        .instructions {
+            display: none;
+            min-height: 100vh;
+            padding: 30px 20px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 25px;
+            color: white;
+        }
+
+        .instructions h2 {
+            font-size: 32px;
+            text-align: center;
+        }
+
+        .instructions-content {
+            width: 100%;
+            max-width: 850px;
+            padding: 25px;
+            border: 2px solid #BBDEFB;
+            border-radius: 15px;
+            background-color: darkslateblue;
+            line-height: 1.7;
+        }
+
+        .instructions-content h3 {
+            margin-top: 20px;
+            margin-bottom: 8px;
+            color: #BBDEFB;
+        }
+
+        .instructions-content h3:first-child {
+            margin-top: 0;
+        }
+
+        .instructions-content p {
+            margin-bottom: 6px;
+        }
+
+        .brick-guide {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+
+        .brick-guide .brick {
+            position: static;
+            flex-shrink: 0;
+        }
+
+        .brick-guide p {
+            margin: 0;
+        }
+
+        .brick-guide .coreBrick {
+            width: 75px;
+            height: 45px;
+        }
+
+
+
+        .btn-back{
+            min-width: 250px;
+            padding: 15px 10px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-back:hover{
+            transform: scale(1.05);
+        }
+
+
+        .game-screen{
+            min-height: 100vh;
+
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        .game-info{
+            width: 900px;
+            display: flex;
+            justify-content: space-between;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .game-board{
+            width: 1100px;
+            height: 600px;
+            position: relative;
+            background-color: #111;
+            border: 3px solid white;
+            overflow: hidden;
+        }
+
+        .paddle{
+            position: absolute;
+            width: 100px;
+            height: 15px;
+            left: 50%;
+            transform: translate(-50%);
+            bottom: 20px;
+            border-radius: 20px;
+            background-color: white;
+        }
+
+        .ball{
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: white;
+            position: absolute;
+            transform: translate(-50%, -50%);
+
+        }
+
+        .brick{
+            position: absolute;
+            width: 75px;
+            height: 15px;
+            border-radius: 5px;
+            background-color: #BBDEFB;
+        }
+
+
+
+        .game-over, .win-game, .pause-game{
+            margin: auto;
+            padding: 30px;
+            display: none;
+            position: absolute;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            border-radius: 15px;
+            border: 2px solid #BBDEFB;
+            background-color: darkslateblue;
+            color: white;
+            z-index: 10;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .game-over h4{
+            font-size: 40px;
+            color: red;
+        }
+
+
+
+        .game-over button, .win-game button, .pause-game button{
+            margin: 10px;
+            width: 120px;
+            height: 50px;
+            border-radius: 15px;
+            padding: 15px 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+
+        }
+
+        .game-over button:hover, .win-game button:hover, .pause-game button:hover{
+            transform: scale(1.05);
+        }
+
+        .win-game h4{
+            font-size: 40px;
+            color: greenyellow;
+        }
+
+        .pause-game h4{
+            font-size: 40px;
+            color: whitesmoke;
+        }
+
+
+        .support-item {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            background-color: white;
+            color: black;
+            font-size: 14px;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+
+        .shield{
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 10px;
+            height: 5px;
+            background-color: #38BDF8;
+            z-index: 2;
+        }
+
+        .arrow {
+            position: absolute;
+            width: 2px;
+            height: 30px;
+            background: white;
+            transform-origin: center bottom;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .arrow::before {
+            content: "";
+            position: absolute;
+            top: -6px;
+            left: -4px;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 8px solid white;
+        }
+
+        .unbreakBrick{
+            width: 15px;
+            height: 15px;
+            background-color: #616161;
+            border: 2px solid #424242;
+            box-sizing: border-box;
+            border-radius: 5px;
+        }
+
+        .healingBrick {
+            width: 75px;
+            height: 15px;
+            background-color: #F59E0B;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            border: 1px solid #FBBF24;
+            box-sizing: border-box;
+        }
+
+        .spawnerBrick {
+            width: 75px;
+            height: 15px;
+            background-color: #9333ea;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            border: 1px solid #c084fc;
+        }
+
+        .coreBrick {
+            width: 120px;
+            height: 120px;
+            background-color: #16a34a;
+            border: 3px solid #4ade80;
+            border-radius: 10px;
+            box-sizing: border-box;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .portal {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        .portalA {
+            background-color: #0891b2;
+            border: 4px solid #22d3ee;
+        }
+
+        .portalB {
+            background-color: #7c3aed;
+            border: 4px solid #a78bfa;
+        }
+
+
+
+        .healed {
+            animation: healFlash 0.5s ease;
+        }
+
+        @keyframes healFlash {
+            0% {
+                box-shadow: none;
+            }
+
+            50% {
+                box-shadow: 0 0 15px 5px #4ade80;
+            }
+
+            100% {
+                box-shadow: none;
+            }
+        }
+
+
+        .spawning {
+            animation: spawnFlash 0.5s ease;
+        }
+
+        @keyframes spawnFlash {
+            0% {
+                box-shadow: none;
+            }
+
+            50% {
+                box-shadow: 0 0 15px 5px #a855f7;
+            }
+
+            100% {
+                box-shadow: none;
+            }
+        }
+
+        .healingBrick.hit, .spawnerBrick.hit {
+            animation: healingHit 0.2s ease;
+        }
+
+        @keyframes healingHit {
+            50% {
+                background-color: #ef4444;
+                box-shadow: 0 0 12px 4px #ef4444;
+            }
+        }
+    </style>
 
 </head>
 <body>
@@ -37,6 +485,90 @@
             <button class="btn-back" id="choose-level-back">QUAY LẠI</button>
         </section>
 
+
+        <section class="instructions">
+            <h2>HƯỚNG DẪN CHƠI</h2>
+
+            <div class="instructions-content">
+                <h3>1. Điều khiển</h3>
+                <p>← / → hoặc A / D: Di chuyển thanh đỡ.</p>
+                <p>Space: Phóng bóng theo hướng mũi tên.</p>
+                <p>Esc: Tạm dừng. Nhấn nút Tiếp tục để chơi tiếp.</p>
+                <p>Bóng chạm gần mép thanh đỡ sẽ bật chéo hơn.</p>
+
+                <h3>2. Luật chơi</h3>
+                <p>Di chuyển thanh đỡ để giữ bóng trong sân,
+                    phá gạch và ghi điểm.</p>
+                <p>Mỗi màn bắt đầu với 3 mạng. Khi tất cả bóng
+                    rơi khỏi sân, bạn mất một mạng.</p>
+                <p>Hết mạng thì trò chơi kết thúc.</p>
+                <p>Màn 1–5: Phá hết các gạch có thể phá để chiến thắng.</p>
+                <p>Màn 6: Phá hủy lõi để chiến thắng.</p>
+
+                <h3>3. Các loại gạch</h3>
+
+                <div class="brick-guide">
+                    <span class="brick unbreakBrick" style="margin-left: 30px"></span>
+                    <p style="margin-left: 30px">Gạch xám: Không thể phá hủy.</p>
+                </div>
+
+                <div class="brick-guide">
+                    <span class="brick normalBrick" style="background-color: #BBDEFB;"></span>
+                    <p>Gạch xanh nhạt: 1 máu.</p>
+                </div>
+
+                <div class="brick-guide">
+                    <span class="brick normalBrick" style="background-color: #64B5F6;"></span>
+                    <p>Gạch xanh vừa: 2 máu.</p>
+                </div>
+
+                <div class="brick-guide">
+                    <span class="brick normalBrick" style="background-color: #2196F3;"></span>
+                    <p>Gạch xanh đậm: 3 máu.</p>
+                </div>
+
+                <div class="brick-guide">
+                    <span class="brick healingBrick">+</span>
+                    <p>3 máu, hồi máu cho gạch gần nó.</p>
+                </div>
+
+                <div class="brick-guide">
+                    <span class="brick spawnerBrick">★</span>
+                    <p>3 máu, sinh thêm gạch mới.</p>
+                </div>
+
+                <div class="brick-guide">
+                    <span class="brick coreBrick">3 HP</span>
+                    <p>Lõi: 3 máu, chỉ nhận sát thương khi
+                        đã phá hết gạch bảo vệ.</p>
+                </div>
+
+                <p>Mỗi lần trúng bóng, gạch có thể phá mất 1 máu.
+                    Gạch thường đổi màu theo lượng máu còn lại.</p>
+
+                <h3>4. Các màn chơi</h3>
+                <p>Màn 1: Phá các viên gạch thường.</p>
+                <p>Màn 2: Có gạch xám cản đường bóng.</p>
+                <p>Màn 3: Có gạch hồi máu.</p>
+                <p>Màn 4: Có cả gạch hồi máu và gạch sinh thêm gạch.</p>
+                <p>Màn 5: Hai cổng dịch chuyển bóng qua lại.
+                    Tận dụng cổng để tiếp cận gạch bên trong khung.</p>
+                <p>Màn 6: Phá hết gạch bảo vệ để tấn công lõi.
+                    Sau mỗi lần mất máu và chưa bị phá hủy,
+                    lõi tạo thêm gạch bảo vệ.</p>
+
+                <h3>5. Vật phẩm</h3>
+                <p>Vật phẩm có thể rơi khi phá gạch.
+                    Dùng thanh đỡ để thu thập.</p>
+                <p>♥: Thêm một mạng, tối đa 3 mạng.</p>
+                <p>◆: Tạo lá chắn đỡ bóng một lần rồi biến mất.</p>
+                <p>×3: Nhân số bóng, tối đa 9 bóng trong sân.</p>
+            </div>
+
+            <button class="btn-back" id="instructions-back">QUAY LẠI</button>
+        </section>
+
+
         <section class="game-screen">
             <div class="game-info">
                 <span>MÀN: <span id="current-lv">0</span> </span>
@@ -46,7 +578,6 @@
 
 
             <div class="game-board">
-<!--                <div class="brick"></div>-->
                 <div class="ball"></div>
                 <div class="paddle"></div>
                 <div class="arrow"></div>
@@ -86,13 +617,7 @@
                     </div>
                 </div>
             </div>
-
-
-
         </section>
-
-
-
 
     </main>
 
