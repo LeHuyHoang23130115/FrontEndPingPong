@@ -307,6 +307,26 @@ body{
     border: 1px solid #c084fc;
 }
 
+.portal {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+.portalA {
+    background-color: #0891b2;
+    border: 4px solid #22d3ee;
+}
+
+.portalB {
+    background-color: #7c3aed;
+    border: 4px solid #a78bfa;
+}
+
+
 
 .healed {
     animation: healFlash 0.5s ease;

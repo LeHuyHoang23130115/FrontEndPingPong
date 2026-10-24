@@ -71,7 +71,7 @@ const backToMenuBtn = document.querySelectorAll(".back-to-menu");
 
 const winGame = document.querySelector(".win-game");
 const winScore = document.querySelector("#win-score");
-const nextLevelBtn = document.querySelectorAll(".nextLevel");
+const nextLevelBtn = document.querySelectorAll(".next-level");
 
 let currentLevel = 1;
 
@@ -290,6 +290,8 @@ function resetGame(){
     bricks.forEach(brick => brick.remove());
     bricks.length = 0;
 
+    gameBoard.querySelectorAll(".portal").forEach(portal => portal.remove());
+
     brickWithoutItem = 0;
     supportItems.forEach(item => item.remove());
     supportItems.length = 0;
@@ -399,7 +401,10 @@ function  ballMoving() {
             continue;
         }
 
-
+        // Check cổng portal
+        if (currentLevel === 5) {
+            checkPortalCollision(b);
+        }
 
 
         // Va chạm brick và ramdom item
@@ -619,18 +624,32 @@ function startLevel(level){
         createBrickLv4();
         lastHealTime = performance.now();
         lastSpawnTime = performance.now();
+    } else if (level === 5) {
+        createBrickLv5();
     }
 }
 
 
 
+function addBrick(x, y, type) {
+    const brick = document.createElement("div");
+    brick.classList.add("brick", type);
+
+    brick.style.left = x + "px";
+    brick.style.top = y + "px";
+
+    gameBoard.appendChild(brick);
+    bricks.push(brick);
+}
+
+
 function createBrickLv1(){
-    const brickRows = 8;
-    const brickColumns = 6;
+    const brickRows = 5;
+    const brickColumns = 4;
     const brickHeight = 15;
     const brickWidth = 75;
-    const gapBrickHeight = 15;
-    const gapBrickWidth = 100;
+    const gapBrickHeight = 20;
+    const gapBrickWidth = 140;
 
     const bricksTotalWidth = brickColumns * brickWidth + (brickColumns - 1) * gapBrickWidth;
 
@@ -659,33 +678,23 @@ function createBrickLv1(){
 
 
 function createBrickLv2() {
-    const brickRows = 8;
-    const brickColumns = 10;
+    const brickRows = 7;
+    const brickColumns = 6;
     const brickHeight = 15;
     const brickWidth = 75;
-    const gapBrickHeight = 25;
-    const gapBrickWidth = 25;
+    const gapBrickHeight = 20;
+    const gapBrickWidth = 80;
 
     const bricksTotalWidth = brickColumns * brickWidth + (brickColumns - 1) * gapBrickWidth;
     const bricksTotalHeight = brickRows * brickHeight + (brickRows - 1) * gapBrickHeight;
     const brickStartX = (gameBoard.clientWidth - bricksTotalWidth) / 2;
     const brickStartY = 60;
 
-    function addBrick(x, y, type) {
-        const brick = document.createElement("div");
-        brick.classList.add("brick", type);
-
-        brick.style.left = x + "px";
-        brick.style.top = y + "px";
-
-        gameBoard.appendChild(brick);
-        bricks.push(brick);
-    }
 
     // Tạo gạch thường
     for (let row = 0; row < brickRows; row++) {
         for (let col = 0; col < brickColumns; col++) {
-            if (row >= 2 && row <= 5 && col >= 2 && col <= 7) continue;
+            if (row >= 2 && row <= 4 && col >= 1 && col <= 4) continue;
 
             const x = brickStartX + col * (brickWidth + gapBrickWidth);
             const y = brickStartY + row * (brickHeight + gapBrickHeight);
@@ -696,7 +705,6 @@ function createBrickLv2() {
 
     const size = 15;
 
-    // Khung ở giữa
     function addUnbreakFrame(x, y, cols, rows) {
         // Cạnh trên và dưới
         for (let col = 0; col < cols; col++) {
@@ -711,26 +719,26 @@ function createBrickLv2() {
         }
     }
 
-    const startFrameCenterX = brickStartX + 2 * (brickWidth + gapBrickWidth);
+    const startFrameCenterX = brickStartX + (brickWidth + gapBrickWidth);
     const startFrameCenterY = brickStartY + 2 * (brickHeight + gapBrickHeight);
 
-    addUnbreakFrame(startFrameCenterX, startFrameCenterY, 38, 9);
+    addUnbreakFrame(startFrameCenterX, startFrameCenterY, 36, 6);
 
 
     // 4 góc
     function addCorner(x, y, directionX, directionY) {
-        for (let i = 0; i < 28; i++) {
+        for (let i = 0; i < 17; i++) {
             addBrick(x + i * size * directionX, y, "unbreakBrick");
         }
 
-        for (let i = 1; i < 10; i++) {
+        for (let i = 1; i < 7; i++) {
             addBrick(x, y + i * size * directionY, "unbreakBrick");
         }
     }
 
-    const leftX = brickStartX - 25;
+    const leftX = brickStartX - 30;
     const rightX = brickStartX + bricksTotalWidth + 10;
-    const topY = brickStartY - 25;
+    const topY = brickStartY - 30;
     const bottomY = brickStartY + bricksTotalHeight + 15;
 
     addCorner(leftX, topY, 1 , 1);
@@ -856,6 +864,136 @@ function createBrickLv4(){
 }
 
 
+
+function createBrickLv5() {
+    const rows = 3;
+    const cols = 7;
+    const brickWidth = 75;
+    const brickHeight = 15;
+    const gapX = 35;
+    const gapY = 35;
+
+    const totalWidth = cols * brickWidth + (cols - 1) * gapX;
+    const startX = (gameBoard.clientWidth - totalWidth) / 2;
+    const startY = 100;
+
+    const arrayHPTop = [
+        [1, 3, 1, 2, 1, 3, 1],
+        [2, 1, 2, 0, 2, 1, 2],
+        [1, 3, 1, 2, 1, 3, 1]
+    ];
+
+
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            const hp = arrayHPTop[row][col];
+
+            if (hp === 0) continue;
+
+            const brick = document.createElement("div");
+            brick.classList.add("brick", "normalBrick");
+
+            brick.dataset.hp = String(hp);
+            brick.dataset.maxHp = String(hp);
+            brick.style.backgroundColor = brickColors[hp];
+
+            brick.style.left = startX + col * (brickWidth + gapX) + "px";
+            brick.style.top = startY + row * (brickHeight + gapY) + "px";
+
+            gameBoard.appendChild(brick);
+            bricks.push(brick);
+        }
+    }
+
+    // Tạo khung
+    const size = 15;
+
+    function addUnbreak(x, y) {
+        const brick = document.createElement("div");
+        brick.classList.add("brick", "unbreakBrick");
+
+        brick.style.left = x + "px";
+        brick.style.top = y + "px";
+
+        gameBoard.appendChild(brick);
+        bricks.push(brick);
+    }
+
+    function addUnbreakFrame(x, y, cols, rows) {
+        // Cạnh trên và dưới
+        for (let col = 0; col < cols; col++) {
+            addUnbreak(x + col * size, y);
+            addUnbreak(x + col * size, y + (rows - 1) * size);
+        }
+
+        // Cạnh trái và phải
+        for (let row = 1; row < rows - 1; row++) {
+            addUnbreak(x, y + row * size);
+            addUnbreak(x + (cols - 1) * size, y + row * size);
+        }
+    }
+
+    const frameLeft = startX - 30;
+    const frameTop = startY - 30;
+    const frameCols = 53;
+    const frameRows = 12;
+
+    addUnbreakFrame(frameLeft, frameTop, frameCols, frameRows);
+
+    const frameBottom = frameTop + (frameRows - 1) * size;
+
+    // Tạo hàng gạch phía dưới
+
+    const botRows = 2;
+
+    const arrayHPBottom = [
+        [1, 3, 1, 3, 1, 3, 1],
+        [2, 1, 2, 0, 2, 1, 2],
+    ];
+
+    const bottomY = frameBottom + 35;
+
+    for (let row = 0; row < botRows; row++) {
+        for (let col = 0; col < cols; col++) {
+            const hp = arrayHPBottom[row][col];
+
+            if (hp === 0) continue;
+
+            const brick = document.createElement("div");
+            brick.classList.add("brick", "normalBrick");
+
+            brick.dataset.hp = String(hp);
+            brick.dataset.maxHp = String(hp);
+            brick.style.backgroundColor = brickColors[hp];
+
+            brick.style.left = startX + col * (brickWidth + gapX) + "px";
+            brick.style.top = bottomY + row * (brickHeight + gapY) + "px";
+
+            gameBoard.appendChild(brick);
+            bricks.push(brick);
+        }
+    }
+
+    // Tạo Portal A và Portal B
+    function createPortal(x, y, type) {
+        const portal = document.createElement("div");
+        portal.classList.add("portal", type);
+
+        portal.style.left = x + "px";
+        portal.style.top = y + "px";
+
+        gameBoard.appendChild(portal);
+    }
+
+    const portalAX = gameBoard.clientWidth / 2;
+    const portalAY = frameBottom + 40 + brickHeight + gapY;
+
+    const portalBX = gameBoard.clientWidth / 2;
+    const portalBY = startY + brickHeight + gapY + brickHeight / 2;
+
+    createPortal(portalAX, portalAY, "portalA");
+    createPortal(portalBX, portalBY, "portalB");
+}
 
 
 
@@ -1115,4 +1253,48 @@ function spawnBrick() {
 }
 
 
+function checkPortalCollision(b) {
+    const portalA = document.querySelector(".portalA");
+    const portalB = document.querySelector(".portalB");
 
+    if (!portalA || !portalB) return;
+
+    const ballRadius = b.element.offsetWidth / 2;
+    const portalRadius = portalA.offsetWidth / 2;
+
+    const distanceA = Math.hypot(
+        b.x - portalA.offsetLeft, b.y - portalA.offsetTop
+    );
+
+    const distanceB = Math.hypot(
+        b.x - portalB.offsetLeft, b.y - portalB.offsetTop
+    );
+
+
+    if (b.portalLock === "A") {
+        if (distanceA > portalRadius + ballRadius) {
+            b.portalLock = null;
+        }
+        return;
+    }
+    if (b.portalLock === "B") {
+        if (distanceB > portalRadius + ballRadius) {
+            b.portalLock = null;
+        }
+        return;
+    }
+
+
+
+    if (distanceA <= portalRadius + ballRadius) {
+        b.x = portalB.offsetLeft;
+        b.y = portalB.offsetTop;
+
+        b.portalLock = "B";
+    } else if (distanceB <= portalRadius + ballRadius) {
+        b.x = portalA.offsetLeft;
+        b.y = portalA.offsetTop;
+
+        b.portalLock = "A";
+    }
+}
