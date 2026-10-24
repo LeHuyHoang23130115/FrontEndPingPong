@@ -92,6 +92,9 @@ const brickColors = {
 let lastHealTime = 0;
 const HEAL_TIME = 8000;
 
+let lastSpawnTime = 0;
+const SPAWN_TIME = 6000;
+
 
 function damageToBrick(brick) {
     let hp = Number(brick.dataset.hp || 1)
@@ -427,11 +430,19 @@ function  ballMoving() {
                         brick.classList.add("hit");
                     }
 
+                    if (brick.classList.contains("spawnerBrick") && !isDestroy) {
+                        brick.classList.remove("hit");
+                        void brick.offsetWidth;
+                        brick.classList.add("hit");
+                    }
+
                     if (isDestroy) {
                         brick.remove();
                         bricks.splice(i, 1);
 
                         if (brick.classList.contains("healingBrick")) {
+                            score += 50;
+                        } else if (brick.classList.contains("spawnerBrick")) {
                             score += 50;
                         } else {
                             score += 10 * Number(brick.dataset.maxHp || 1);
@@ -526,7 +537,11 @@ function  ballMoving() {
         return;
     }
 
-    if (!bricks.some(brick => brick.classList.contains('normalBrick') || brick.classList.contains('healingBrick'))) {
+    if (!bricks.some(brick => brick.classList.contains('normalBrick')
+        || brick.classList.contains('healingBrick')
+        || brick.classList.contains('spawnerBrick'))) {
+
+
         isMoving = false;
         isGameStart = false;
 
@@ -540,7 +555,7 @@ function  ballMoving() {
     itemMoving();
     checkItemCollision();
 
-    if (currentLevel === 3){
+    if (currentLevel === 3 || currentLevel === 4){
         const now = performance.now();
 
         if (now - lastHealTime >= HEAL_TIME){
@@ -549,6 +564,15 @@ function  ballMoving() {
         }
     }
 
+
+    if (currentLevel === 4){
+        const now = performance.now();
+
+        if (now - lastSpawnTime >= SPAWN_TIME){
+            spawnBrick();
+            lastSpawnTime = now;
+        }
+    }
 
     requestAnimationFrame(ballMoving);
 }
@@ -591,6 +615,10 @@ function startLevel(level){
     } else if (level === 3) {
         createBrickLv3();
         lastHealTime = performance.now();
+    } else if (level === 4) {
+        createBrickLv4();
+        lastHealTime = performance.now();
+        lastSpawnTime = performance.now();
     }
 }
 
@@ -719,7 +747,7 @@ function createBrickLv3() {
     const brickWidth = 75;
     const brickHeight = 15;
     const gapX = 10;
-    const gapY = 10;
+    const gapY = 15;
     const groupGap = 80;
 
     const groupWidth = cols * brickWidth + (cols - 1) * gapX;
@@ -730,7 +758,7 @@ function createBrickLv3() {
     const arrayHP = [
         [1, 2, 3, 2, 1],
         [2, 1, 2, 1, 2],
-        [3, 2, 0, 2, 3],
+        [3, 2, 5, 2, 3],
         [2, 1, 2, 1, 2],
         [1, 2, 3, 2, 1]
     ];
@@ -743,7 +771,7 @@ function createBrickLv3() {
                 const brick = document.createElement("div");
                 brick.classList.add("brick");
 
-                if (hp === 0) {
+                if (hp === 5) {
                     brick.classList.add("healingBrick");
                     brick.textContent = "+";
                 } else {
@@ -751,8 +779,8 @@ function createBrickLv3() {
                     brick.style.backgroundColor = brickColors[hp];
                 }
 
-                brick.dataset.hp = String(hp === 0 ? 3 : hp);
-                brick.dataset.maxHp = String(hp === 0 ? 3 : hp);
+                brick.dataset.hp = String(hp === 5 ? 3 : hp);
+                brick.dataset.maxHp = String(hp === 5 ? 3 : hp);
 
                 brick.style.left = startX + group * (groupWidth + groupGap) + col * (brickWidth + gapX) + "px";
                 brick.style.top = startY + row * (brickHeight + gapY) + "px";
@@ -764,6 +792,68 @@ function createBrickLv3() {
     }
 }
 
+
+
+
+function createBrickLv4(){
+    const rows = 11;
+    const cols = 11;
+    const brickWidth = 75;
+    const brickHeight = 15;
+    const gapX = 10;
+    const gapY = 15;
+
+    const totalWidth = cols * brickWidth + (cols - 1) * gapX;
+    const startX = (gameBoard.clientWidth - totalWidth) / 2;
+    const startY = 70;
+
+    const arrayHP = [
+        [1, 2, 3, 1, 2, 3, 2, 1, 3, 2, 1],
+        [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+        [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+        [1, 0, 2, 0, 0, 0, 0, 0, 2, 0, 1],
+        [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+        [3, 0, 0, 0, 4, 5, 4, 0, 0, 0, 3],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [2, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2],
+        [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+        [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+        [1, 2, 3, 1, 2, 3, 2, 1, 3, 2, 1]
+    ];
+
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+
+            const hp = arrayHP[row][col];
+
+            if (hp === 0) continue;
+
+            const brick = document.createElement("div");
+            brick.classList.add("brick");
+
+            if (hp === 5) {
+                brick.classList.add("healingBrick");
+                brick.textContent = "+";
+            } else if (hp === 4) {
+                brick.classList.add("spawnerBrick");
+                brick.textContent = "★";
+            } else {
+                brick.classList.add("normalBrick");
+                brick.style.backgroundColor = brickColors[hp];
+            }
+
+            const brickHP = hp >=3 ? 3: hp;
+            brick.dataset.hp = String(brickHP);
+            brick.dataset.maxHp = String(brickHP);
+
+            brick.style.left = startX + col * (brickWidth + gapX) + "px";
+            brick.style.top = startY + row * (brickHeight + gapY) + "px";
+
+            gameBoard.appendChild(brick);
+            bricks.push(brick);
+        }
+    }
+}
 
 
 
@@ -933,16 +1023,19 @@ function healHP(){
 
     for (const healingBrick of healingBricks) {
         const nearBricks = bricks.filter(brick => {
-            if (!brick.classList.contains("normalBrick")) return false;
+            if (brick.classList.contains("normalBrick") || brick.classList.contains("spawnerBrick")) {
 
-            const hp = Number(brick.dataset.hp);
-            const maxHP = Number(brick.dataset.maxHp);
+                const hp = Number(brick.dataset.hp);
+                const maxHP = Number(brick.dataset.maxHp);
 
-            const distanceX = Math.abs(brick.offsetLeft - healingBrick.offsetLeft);
-            const distanceY = Math.abs(brick.offsetTop - healingBrick.offsetTop);
+                const distanceX = Math.abs(brick.offsetLeft - healingBrick.offsetLeft);
+                const distanceY = Math.abs(brick.offsetTop - healingBrick.offsetTop);
 
 
-            return hp >= 1 && maxHP > 1 && hp < maxHP && distanceX <= 170 && distanceY <= 50;
+                return hp >= 1 && maxHP > 1 && hp < maxHP && distanceX <= 170 && distanceY <= 50;
+            }
+
+
         })
 
         if (nearBricks.length === 0) continue;
@@ -952,7 +1045,11 @@ function healHP(){
 
         const newHP = Number(healedBrick.dataset.hp) + 1;
         healedBrick.dataset.hp = String(newHP);
-        healedBrick.style.backgroundColor = brickColors[newHP];
+
+        if (healedBrick.classList.contains("normalBrick")) {
+            healedBrick.style.backgroundColor = brickColors[newHP];
+        }
+
 
         healedBrick.classList.remove("healed");
         void healedBrick.offsetWidth;
@@ -960,6 +1057,61 @@ function healHP(){
     }
 
 
+}
+
+
+function spawnBrick() {
+    const spawners = bricks.filter(brick => brick.classList.contains("spawnerBrick"));
+
+    const directions = [
+        [-1, -1], [-1, 0], [-1, 1],
+        [0, -1],           [0, 1],
+        [1, -1],  [1, 0],  [1, 1]
+    ];
+
+    for (const spawner of spawners) {
+        const emptyPositions = [];
+
+        for (const [row, col] of directions) {
+            const x = spawner.offsetLeft + col * 85;
+            const y = spawner.offsetTop + row * 30;
+
+            const occupied = bricks.some(brick =>
+                Math.abs(brick.offsetLeft - x) < 1 &&
+                Math.abs(brick.offsetTop - y) < 1
+            );
+
+            if (!occupied && x >= 0 && y >= 0 &&
+                x + 75 <= gameBoard.clientWidth &&
+                y + 15 <= gameBoard.clientHeight) {
+                emptyPositions.push({x, y});
+            }
+        }
+
+        if (emptyPositions.length === 0) continue;
+
+        const random = Math.floor(Math.random() * emptyPositions.length);
+        const position = emptyPositions[random];
+
+        const hp = Math.random() < 0.6 ? 1 : 2;
+
+        const brick = document.createElement("div");
+        brick.classList.add("brick", "normalBrick", "spawnedBrick");
+
+        brick.dataset.hp = String(hp);
+        brick.dataset.maxHp = String(hp);
+
+        brick.style.backgroundColor = brickColors[hp];
+        brick.style.left = position.x + "px";
+        brick.style.top = position.y + "px";
+
+        gameBoard.appendChild(brick);
+        bricks.push(brick);
+
+        spawner.classList.remove("spawning");
+        void spawner.offsetWidth;
+        spawner.classList.add("spawning");
+    }
 }
 
 

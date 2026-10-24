@@ -285,12 +285,28 @@ body{
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
-    font-size: 14px;
+    color: white;
+    font-size: 18px;
     font-weight: bold;
     border: 1px solid #FBBF24;
     box-sizing: border-box;
 }
+
+.spawnerBrick {
+    width: 75px;
+    height: 15px;
+    background-color: #9333ea;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border: 1px solid #c084fc;
+}
+
 
 .healed {
     animation: healFlash 0.5s ease;
@@ -311,7 +327,25 @@ body{
 }
 
 
-.healingBrick.hit {
+.spawning {
+    animation: spawnFlash 0.5s ease;
+}
+
+@keyframes spawnFlash {
+    0% {
+        box-shadow: none;
+    }
+
+    50% {
+        box-shadow: 0 0 15px 5px #a855f7;
+    }
+
+    100% {
+        box-shadow: none;
+    }
+}
+
+.healingBrick.hit, .spawnerBrick.hit {
     animation: healingHit 0.2s ease;
 }
 
